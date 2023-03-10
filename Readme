@@ -1,0 +1,7 @@
+Install the dependencies with 
+pip install -r requirements.txt 
+
+
+Start the Prefect UI with:
+prefect orion start
+

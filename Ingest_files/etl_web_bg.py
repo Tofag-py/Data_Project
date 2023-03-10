@@ -4,7 +4,7 @@ from prefect import flow, task
 import requests
 from chardet import detect
 import os
-
+from prefect_gcp.cloud_storage import GcsBucket
 
 os.mkdir("files")
 
@@ -23,12 +23,21 @@ def fetch_data(url: str, encoding: str) -> pd.DataFrame:
     df = pd.read_csv(url, encoding=encoding)
     return df
 
+# Define a task that writes a DataFrame to a local Parquet file
 @task()
 def write_local(df: pd.DataFrame, q: str) -> Path:
-    # Define a task that writes a DataFrame to a local Parquet file
+    
     path = Path(f"files\{q}.parquet")
     df.to_parquet(path, compression="gzip")
     return path
+
+# Define a task that writes that writes the dataframes to gcs
+@task()
+def write_to_gcs(path: Path):
+    """Upload local parquet file to GCS"""
+    gcs_block = GcsBucket.load("newgcsbucket")
+    gcs_block.upload_from_path(from_path=f"{path}", to_path=path)
+    return
 
 # Define a Prefect flow that uses the fetch_data task to read data from a URL and store it in GCS
 @flow()
