@@ -1,2 +1,5 @@
-Ingest_files\files
+Ingest_files/files
 terraform_files/.terraform
+Ingest_files/covid_data
+Ingest_files/.ipynb_checkpoints
+Ingest_files/test.py
