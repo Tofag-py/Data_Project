@@ -1,4 +1,4 @@
-from web_to_local import append_csv_to_mega_file
+from web_to_local import run_tasks
 from prefect import flow, task
 import pandas as pd
 from prefect_gcp.cloud_storage import GcsBucket
@@ -54,19 +54,20 @@ def csv_to_parquet(df: pd.DataFrame) -> pd.DataFrame:
 def write_gcs(df: pd.DataFrame, mega_filepath) -> None:
     """Upload local parquet file to GCS"""
     gcs_block = GcsBucket.load("project-bucket")
-    gcs_block.upload_from_path(from_path=mega_filepath, to_path=mega_filepath)
+    gcs_block.upload_from_path(from_path=mega_filepath(), to_path=mega_filepath())
     return
+
 
 #Run the tasks
 @flow(log_prints=True)
-def run_tasks():
+def local_to_gcs_tasks():
     
-    mega_file = append_csv_to_mega_file.map(csv_data, dates, data_dir)
+    mega_file = run_tasks()
     df = read_csv(mega_file())
     df_cleaned = clean_data(df)
     csv_to_parquet(df_cleaned)
-    write_gcs(csv_to_parquet, append_csv_to_mega_file)
+    write_gcs(csv_to_parquet, run_tasks)
 
 # Run the flow
 if __name__ == "__main__":
-    run_tasks()
+    local_to_gcs_tasks()

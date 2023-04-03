@@ -3,7 +3,6 @@ import requests
 from prefect import task, flow
 import datetime
 import pandas as pd
-from prefect_gcp.cloud_storage import GcsBucket
 
 # Create the data directory if it does not exist
 @task(log_prints=True)
@@ -48,6 +47,11 @@ def append_csv_to_mega_file(csv_data, date, data_dir) -> str:
     os.remove(csv_filepath)
     return mega_filepath
 
+@task(log_prints=True)
+def mega_file_path(mega_file):
+    return mega_file
+
+
 #Run the tasks
 @flow(log_prints=True)
 def run_tasks():
@@ -67,6 +71,9 @@ def run_tasks():
     csv_data = get_csv.map(dates, base_url)
     csv_files = save_csv.map(csv_data, dates, data_dir)
     mega_file = append_csv_to_mega_file.map(csv_data, dates, data_dir)
+    file_path = mega_file_path(mega_file)
+    return file_path
+   
        
 
 # Run the flow
